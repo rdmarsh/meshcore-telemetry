@@ -10,12 +10,14 @@ log() {
   fi
 }
 
+# --- config ------------------------------------------------------------------
 readonly device_path="/dev/meshcore0"
 
-batch_size="${BATCH_SIZE:-3}"
-readonly batch_delay=10
+# single-path probing keeps duration as true per-path latency
+readonly trace_delay=10
 readonly trace_timeout=45
 
+# --- trace targets -----------------------------------------------------------
 destinations=(
   "4a:faulco"
   "22:lapstone"
@@ -26,13 +28,16 @@ destinations=(
 )
 
 paths=()
+
 for d in "${destinations[@]}"; do
   node="${d%%:*}"
   site="${d##*:}"
+
   paths+=("$site|e2,$node,e2")
   paths+=("$site|2f,$node,2f")
 done
 
+# --- version tags ------------------------------------------------------------
 get_version_tags() {
   /usr/local/bin/meshcore-cli -j -s "$device_path" ver 2>/dev/null |
   jq -r '
@@ -47,90 +52,154 @@ get_version_tags() {
   ' 2>/dev/null || echo "ver=unknown,model=unknown"
 }
 
+# --- radio tags --------------------------------------------------------------
 get_radio_tags() {
   /usr/local/bin/meshcore-cli -j -s "$device_path" infos 2>/dev/null |
   jq -r '
     "radio_freq=" + (.radio_freq|tostring) +
-    ",radio_bw=" + (.radio_bw|tostring) +
-    ",radio_sf=" + (.radio_sf|tostring) +
-    ",radio_cr=" + (.radio_cr|tostring)
+    ",radio_bw="   + (.radio_bw|tostring) +
+    ",radio_sf="   + (.radio_sf|tostring) +
+    ",radio_cr="   + (.radio_cr|tostring)
   ' 2>/dev/null ||
   echo "radio_freq=0,radio_bw=0,radio_sf=0,radio_cr=0"
 }
 
-run_batch() {
-  local vt="$1"
-  local rt="$2"
-  shift 2
+# --- emit path result --------------------------------------------------------
+emit_trace_result() {
+  local site="$1"
+  local path="$2"
+  local success="$3"
+  local duration="$4"
+  local vt="$5"
+  local rt="$6"
+  local failure_reason="${7:-}"
 
-  local cmd=(/usr/local/bin/meshcore-cli -j -s "$device_path")
-  local batch_paths=()
-  local batch_sites=()
+  local tags="site=${site},path=${path//,/-},${vt},${rt}"
 
-  for item in "$@"; do
-    site="${item%%|*}"
-    path="${item##*|}"
-    batch_sites+=("$site")
-    batch_paths+=("$path")
-    cmd+=(trace "$path")
-  done
+  if [ -n "$failure_reason" ]; then
+    tags="${tags},failure_reason=${failure_reason}"
+  fi
 
-  output="$(timeout "$trace_timeout" "${cmd[@]}" 2>/dev/null || true)"
-  [ -z "$output" ] && return
-
-  i=0
-
-  while read -r obj; do
-
-    if jq -e '.error' >/dev/null 2>&1 <<<"$obj"; then
-      log "Trace timeout: ${batch_sites[$i]} path ${batch_paths[$i]}"
-      i=$((i+1))
-      continue
-    fi
-
-    site="${batch_sites[$i]}"
-    i=$((i+1))
-
-    jq -r \
-      --arg site "$site" \
-      --arg vt "$vt" \
-      --arg rt "$rt" '
-      .path as $p |
-      ($p|length) as $len |
-      ($p[0:$len-1] | map(.hash) | join("-")) as $path |
-
-      if $len < 2 then empty
-      else
-        (
-          range($len-1) as $x |
-          "meshcore_trace" +
-          ",site=" + $site +
-          ",path=" + $path +
-          ",from=" +
-            (if $x==0 then "home" else $p[$x-1].hash end) +
-          ",to=" + $p[$x].hash +
-          "," + $vt +
-          "," + $rt +
-          " snr=" + ($p[$x].snr|tostring)
-        ),
-        (
-          "meshcore_trace" +
-          ",site=" + $site +
-          ",path=" + $path +
-          ",from=" + $p[$len-2].hash +
-          ",to=home" +
-          "," + $vt +
-          "," + $rt +
-          " snr=" + ($p[$len-1].snr|tostring)
-        )
-      end
-    ' <<<"$obj"
-
-  done < <(
-    printf '%s\n' "$output" | jq -c '.'
-  )
+  printf \
+'meshcore_trace_result,%s success=%si,duration=%s\n' \
+    "$tags" \
+    "$success" \
+    "$duration"
 }
 
+# --- run one trace -----------------------------------------------------------
+run_trace() {
+  local item="$1"
+  local vt="$2"
+  local rt="$3"
+
+  local site="${item%%|*}"
+  local path="${item##*|}"
+
+  local start end duration output
+
+  start=$(date +%s.%N)
+
+  output="$(
+    timeout "$trace_timeout" \
+      /usr/local/bin/meshcore-cli -j -s "$device_path" trace "$path" \
+      2>/dev/null || true
+  )"
+
+  end=$(date +%s.%N)
+
+  duration=$(
+    awk -v s="$start" -v e="$end" \
+      'BEGIN{printf "%.2f", (e-s)}'
+  )
+
+  # command-level timeout (no response at all)
+  if [ -z "$output" ]; then
+    log "Trace timeout (${trace_timeout}s): $site path $path"
+
+    emit_trace_result \
+      "$site" \
+      "$path" \
+      0 \
+      "${trace_timeout}.00" \
+      "$vt" \
+      "$rt" \
+      "command_timeout"
+
+    return
+  fi
+
+  # mesh returned explicit trace failure
+  if jq -e '.error' >/dev/null 2>&1 <<<"$output"; then
+    reason="$(
+      jq -r '.error
+        | ascii_downcase
+        | gsub("[^a-z0-9]+";"_")
+        | sub("_$";"")
+      ' <<<"$output"
+    )"
+
+    log "Trace failed ($reason): $site path $path"
+
+    emit_trace_result \
+      "$site" \
+      "$path" \
+      0 \
+      "$duration" \
+      "$vt" \
+      "$rt" \
+      "$reason"
+
+    return
+  fi
+
+  emit_trace_result \
+    "$site" \
+    "$path" \
+    1 \
+    "$duration" \
+    "$vt" \
+    "$rt"
+
+  jq -r \
+    --arg site "$site" \
+    --arg vt "$vt" \
+    --arg rt "$rt" '
+    .path as $p |
+    ($p | length) as $len |
+    ($p[0:$len-1] | map(.hash) | join("-")) as $path |
+
+    if $len < 2 then
+      empty
+    else
+      (
+        range($len - 1) as $x |
+        "meshcore_trace" +
+        ",site=" + $site +
+        ",path=" + $path +
+        ",from=" +
+          (if $x == 0 then "home"
+           else $p[$x-1].hash end) +
+        ",to=" + $p[$x].hash +
+        "," + $vt +
+        "," + $rt +
+        " snr=" + ($p[$x].snr|tostring)
+      ),
+      (
+        "meshcore_trace" +
+        ",site=" + $site +
+        ",path=" + $path +
+        ",from=" + $p[$len-2].hash +
+        ",to=home" +
+        "," + $vt +
+        "," + $rt +
+        " snr=" + ($p[$len-1].snr|tostring)
+      )
+    end
+  ' <<<"$output"
+}
+
+# --- main --------------------------------------------------------------------
 log "Starting meshcore trace sweep"
 
 vt=$(get_version_tags)
@@ -140,21 +209,20 @@ mapfile -t shuffled_paths < <(
   printf "%s\n" "${paths[@]}" | shuf
 )
 
-index=0
 total=${#shuffled_paths[@]}
 
-while [ "$index" -lt "$total" ]; do
+for i in "${!shuffled_paths[@]}"; do
+  item="${shuffled_paths[$i]}"
 
-  batch=( "${shuffled_paths[@]:index:batch_size}" )
+  run_trace \
+    "$item" \
+    "$vt" \
+    "$rt"
 
-  run_batch "$vt" "$rt" "${batch[@]}"
-
-  index=$((index + batch_size))
-
-  if [ "$index" -lt "$total" ]; then
-    sleep "$batch_delay"
+  # skip final delay; no point sleeping before exit
+  if [ "$i" -lt $((total - 1)) ]; then
+    sleep "$trace_delay"
   fi
-
 done
 
 log "Finished meshcore trace poll"
