@@ -29,6 +29,7 @@ Installed in:
 ```text
 /usr/local/bin/mc_trace.sh
 /usr/local/bin/mc_status.sh
+/usr/local/bin/mc_refresh_login.sh
 ```
 
 ## Serial device
@@ -40,6 +41,15 @@ Uses stable udev symlink:
 ```
 
 Avoids ttyUSB/ttyACM numbering changes after reboot.
+
+The node connected via USB **must be configured as a serial companion**, not a repeater. If it is a repeater, `meshcore-cli` will fail with:
+
+```text
+ERROR:meshcore:Are you sure your node is a serial companion ?
+ERROR:meshcore:To connect to a repeater, use -r option.
+```
+
+None of the scripts will work until this is corrected in the node's firmware configuration.
 
 ---
 
@@ -283,6 +293,33 @@ sudo chmod 640 /etc/telegraf/telegraf.env
 
 ---
 
+# Refresh logins
+
+`mc_refresh_login.sh` re-authenticates to all contacts in the local contact database. Run this manually when a node is reflashed or swapped and its contact entry needs to be re-established.
+
+## Usage
+
+```bash
+export MESH_PASSWORD='...'
+./mc_refresh_login.sh
+```
+
+Requires `MESH_PASSWORD` to be set. The script exits with the number of failed logins (0 = all succeeded).
+
+## Contacts
+
+| Alias         | Display name          |
+| ------------- | --------------------- |
+| qh_corb       | Quakers Hill Corb     |
+| qh_wold       | Quakers Hill Wold     |
+| qh_mid        | Quakers Hill Mid      |
+| qh_paterson   | QH Paterson           |
+| acaciagardens | Acacia Gardens        |
+
+A 2-second pause is inserted between each login to avoid hammering the mesh.
+
+---
+
 # Testing
 
 ## Run scripts manually
@@ -354,9 +391,7 @@ If MeshCore changes that behaviour, batch correlation logic must be revisited.
 
 `req_status` requires monitored nodes to exist in local contact database.
 
-If hardware is swapped or reflashed:
-
-contacts may need re-importing.
+If hardware is swapped or reflashed, contacts may need re-importing via `mc_refresh_login.sh`.
 
 ---
 
