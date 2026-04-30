@@ -32,15 +32,15 @@
         }
       }
     ],
-    "cursorSync": "Off",
+    "cursorSync": "Crosshair",
     "editable": true,
     "elements": {
       "panel-1": {
         "kind": "Panel",
         "spec": {
           "id": 1,
-          "title": "Mesh Reliability Trend",
-          "description": "Percentage of trace attempts that succeeded, averaged over 1-hour windows. 100% means all paths were reachable. Drops indicate periods of poor mesh connectivity.",
+          "title": "Reliability by Site (1h)",
+          "description": "Percentage of trace attempts that succeeded per site, averaged over 1-hour windows. 100% means all paths to that site were reachable. Drops show which specific node degraded when a change was made. Gaps mean no data was collected.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -57,7 +57,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn:(r)=>r._measurement==\"meshcore_trace_result\")\n  |> filter(fn:(r)=>r._field==\"success\")\n  |> map(fn:(r)=>({\n      _time: r._time,\n      _value: float(v:r._value) * 100.0\n  }))\n  |> aggregateWindow(every:1h, fn:mean)\n"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn:(r)=>r._measurement==\"meshcore_trace_result\")\n  |> filter(fn:(r)=>r._field==\"success\")\n  |> map(fn:(r)=>({\n      _time: r._time,\n      _value: float(v:r._value) * 100.0,\n      site: r.site\n  }))\n  |> group(columns: [\"site\"])\n  |> aggregateWindow(every:1h, fn:mean, createEmpty:false)\n"
                       }
                     },
                     "refId": "A",
@@ -80,15 +80,15 @@
                   "multiLane": false
                 },
                 "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
+                  "calcs": ["mean", "min"],
+                  "displayMode": "table",
                   "placement": "right",
                   "showLegend": true
                 },
                 "tooltip": {
                   "hideZeros": false,
-                  "mode": "single",
-                  "sort": "none"
+                  "mode": "all",
+                  "sort": "desc"
                 }
               },
               "fieldConfig": {
@@ -117,24 +117,144 @@
                     "barAlignment": 0,
                     "barWidthFactor": 0.6,
                     "drawStyle": "line",
-                    "fillOpacity": 0,
+                    "fillOpacity": 10,
                     "gradientMode": "none",
                     "hideFrom": {
                       "legend": false,
                       "tooltip": false,
                       "viz": false
                     },
-                    "insertNulls": 900000,
+                    "insertNulls": 5400000,
                     "lineInterpolation": "smooth",
                     "lineStyle": {
                       "fill": "solid"
                     },
-                    "lineWidth": 1,
-                    "pointSize": 5,
+                    "lineWidth": 2,
+                    "pointSize": 4,
                     "scaleDistribution": {
                       "type": "linear"
                     },
-                    "showPoints": "always",
+                    "showPoints": "auto",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "fieldMinMax": false
+                },
+                "overrides": []
+              }
+            }
+          },
+          "transparent": true
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Overall Reliability Trend",
+          "description": "Whole-mesh success rate averaged over 6-hour windows. Smooths out short outages to show long-term drift. Use this to judge whether a mesh change had a lasting positive or negative effect.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "influxdb",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "efjymvmsrry0wb"
+                      },
+                      "spec": {
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn:(r)=>r._measurement==\"meshcore_trace_result\")\n  |> filter(fn:(r)=>r._field==\"success\")\n  |> map(fn:(r)=>({\n      _time: r._time,\n      _value: float(v:r._value) * 100.0\n  }))\n  |> group()\n  |> aggregateWindow(every:6h, fn:mean, createEmpty:false)\n"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.1",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": ["mean", "min"],
+                  "displayMode": "list",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "blue"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 15,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": 25200000,
+                    "lineInterpolation": "smooth",
+                    "lineStyle": {
+                      "fill": "solid"
+                    },
+                    "lineWidth": 2,
+                    "pointSize": 4,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
                     "showValues": false,
                     "spanNulls": false,
                     "stacking": {
@@ -157,7 +277,7 @@
                     "properties": [
                       {
                         "id": "displayName",
-                        "value": "Reliability (%)"
+                        "value": "Overall (%)"
                       }
                     ]
                   }
@@ -179,10 +299,23 @@
               "x": 0,
               "y": 0,
               "width": 24,
-              "height": 16,
+              "height": 12,
               "element": {
                 "kind": "ElementReference",
                 "name": "panel-1"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 12,
+              "width": 24,
+              "height": 10,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
               }
             }
           }
@@ -195,9 +328,9 @@
     "tags": [],
     "timeSettings": {
       "timezone": "browser",
-      "from": "now-24h",
+      "from": "now-7d",
       "to": "now",
-      "autoRefresh": "",
+      "autoRefresh": "15m",
       "autoRefreshIntervals": [
         "5s",
         "10s",
@@ -224,10 +357,5 @@
       }
     }
   },
-  "status": {
-    "conversion": {
-      "failed": false,
-      "storedVersion": "v0alpha1"
-    }
-  }
+  "status": {}
 }
