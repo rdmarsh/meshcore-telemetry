@@ -2,11 +2,11 @@
   "kind": "Dashboard",
   "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "6dacdead-4447-4e66-ba88-7e928c36a89a",
+    "name": "7aaecd89-ec14-4b8e-9c79-1ea22ddf0b91",
     "namespace": "default",
     "labels": {},
     "annotations": {
-      "grafana.app/folder": "",
+      "grafana.app/folder": "efkmng6scuhhcd",
       "grafana.app/saved-from-ui": "Grafana v13.0.1 (a100054f)"
     }
   },

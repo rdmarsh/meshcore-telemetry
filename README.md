@@ -16,10 +16,10 @@ Shell script telemetry for MeshCore LoRa mesh nodes. Scripts run under Telegraf 
 # Install scripts
 sudo ./deploy.sh
 
-# Set InfluxDB token
-echo "INFLUX_TOKEN=..." | sudo tee /etc/telegraf/telegraf.env
-sudo chown root:telegraf /etc/telegraf/telegraf.env
-sudo chmod 640 /etc/telegraf/telegraf.env
+# Set InfluxDB credentials
+echo "INFLUX_HOST=your-influx-host" | sudo tee -a /etc/default/telegraf
+echo "INFLUX_TOKEN=..." | sudo tee -a /etc/default/telegraf
+sudo chmod 600 /etc/default/telegraf
 ```
 
 The serial device uses a stable udev symlink at `/dev/meshcore0`. The connected node must be configured as a **serial companion**, not a repeater.

@@ -2,11 +2,11 @@
   "kind": "Dashboard",
   "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "2a79c378-1f31-4604-b7ac-165d2a24214d",
+    "name": "9187eec6-afcf-4be6-a064-37eec65f6be3",
     "namespace": "default",
     "labels": {},
     "annotations": {
-      "grafana.app/folder": "",
+      "grafana.app/folder": "efkmng6scuhhcd",
       "grafana.app/saved-from-ui": "Grafana v13.0.1 (a100054f)"
     }
   },
@@ -122,7 +122,7 @@
                       "tooltip": false,
                       "viz": false
                     },
-                    "insertNulls": false,
+                    "insertNulls": 900000,
                     "lineInterpolation": "linear",
                     "lineStyle": {
                       "fill": "solid"
