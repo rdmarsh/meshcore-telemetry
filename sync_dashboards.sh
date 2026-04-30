@@ -21,6 +21,42 @@ CLEAN_JQ='del(
   .metadata.annotations["grafana.app/updatedTimestamp"]
 )'
 
+# Return folder name for a given dashboard filename
+get_folder() {
+  local file="$1"
+  local base
+  base=$(basename "$file")
+  case "$base" in
+    grafana_trace_*|grafana_mesh_reliability*|grafana_failure_reasons*)
+      echo "Traces" ;;
+    *)
+      echo "Nodes" ;;
+  esac
+}
+
+# Return uid of a Grafana folder by name, creating it if it doesn't exist
+ensure_folder() {
+  local folder_name="$1"
+  local result
+  result=$(curl -sf --max-time 30 \
+    -H "Authorization: Bearer $TOKEN" \
+    "$GRAFANA_URL/api/folders")
+  local uid
+  uid=$(printf '%s' "$result" | jq -r --arg n "$folder_name" '.[] | select(.title == $n) | .uid' | head -1)
+  if [[ -z "$uid" ]]; then
+    echo "  -> Creating folder \"$folder_name\"" >&2
+    local create_response
+    create_response=$(curl -sf --max-time 30 \
+      -X POST \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      --data-binary "$(jq -n --arg t "$folder_name" '{"title":$t}')" \
+      "$GRAFANA_URL/api/folders")
+    uid=$(printf '%s' "$create_response" | jq -r '.uid')
+  fi
+  echo "$uid"
+}
+
 pull() {
   mkdir -p "$OUT_DIR"
   echo "Fetching dashboard list..." >&2
@@ -75,8 +111,13 @@ push() {
         echo "  -> Updated local name to $grafana_uid" >&2
       fi
 
-      echo "  -> Sending PUT" >&2
-      payload=$(jq --arg rv "$resource_version" '.metadata.resourceVersion = $rv' "$file")
+      # Set folder on every PUT so existing dashboards get moved if needed
+      folder_name=$(get_folder "$file")
+      folder_uid=$(ensure_folder "$folder_name")
+
+      echo "  -> Sending PUT (folder: $folder_name)" >&2
+      payload=$(jq --arg rv "$resource_version" --arg f "$folder_uid" \
+        '.metadata.resourceVersion = $rv | .metadata.annotations["grafana.app/folder"] = $f' "$file")
       response=$(printf '%s' "$payload" | curl -s --max-time 30 -o /tmp/grafana_push_response.json -w "%{http_code}" \
         -X PUT \
         -H "Authorization: Bearer $TOKEN" \
@@ -86,8 +127,10 @@ push() {
     else
       # Dashboard not found in search — create a stub via the classic API, which
       # produces a properly-indexed dashboard the k8s API can subsequently update.
-      echo "  -> Not found in Grafana, creating stub via classic API" >&2
-      stub=$(jq -n --arg t "$title" '{"dashboard":{"title":$t,"schemaVersion":38,"panels":[]},"folderUid":"","overwrite":false}')
+      folder_name=$(get_folder "$file")
+      folder_uid=$(ensure_folder "$folder_name")
+      echo "  -> Not found in Grafana, creating stub in folder \"$folder_name\"" >&2
+      stub=$(jq -n --arg t "$title" --arg f "$folder_uid" '{"dashboard":{"title":$t,"schemaVersion":38,"panels":[]},"folderUid":$f,"overwrite":false}')
       stub_response=$(printf '%s' "$stub" | curl -s --max-time 30 \
         -X POST \
         -H "Authorization: Bearer $TOKEN" \
@@ -113,9 +156,10 @@ push() {
       mv /tmp/grafana_updated.json "$file"
       name="$grafana_uid"
 
-      # PUT full dashboard content via k8s API
-      echo "  -> Sending PUT with full content" >&2
-      payload=$(jq --arg rv "$resource_version" '.metadata.resourceVersion = $rv' "$file")
+      # PUT full dashboard content via k8s API, including folder assignment
+      echo "  -> Sending PUT with full content (folder: $folder_name)" >&2
+      payload=$(jq --arg rv "$resource_version" --arg f "$folder_uid" \
+        '.metadata.resourceVersion = $rv | .metadata.annotations["grafana.app/folder"] = $f' "$file")
       response=$(printf '%s' "$payload" | curl -s --max-time 30 -o /tmp/grafana_push_response.json -w "%{http_code}" \
         -X PUT \
         -H "Authorization: Bearer $TOKEN" \

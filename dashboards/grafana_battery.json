@@ -2,7 +2,7 @@
   "kind": "Dashboard",
   "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "f178e975-b4d6-4f71-ad43-424c479348a6",
+    "name": "36814af4-c699-493c-953f-ebfc65dffb73",
     "namespace": "default",
     "labels": {},
     "annotations": {
