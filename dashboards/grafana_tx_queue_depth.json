@@ -2,11 +2,11 @@
   "kind": "Dashboard",
   "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "4d649018-4e59-4af4-919f-980c9751befc",
+    "name": "d2339255-0161-4b31-af50-309b5ae0423e",
     "namespace": "default",
     "labels": {},
     "annotations": {
-      "grafana.app/folder": "cfkzytn6ni03ke",
+      "grafana.app/folder": "",
       "grafana.app/saved-from-ui": "Grafana v13.0.1 (a100054f)"
     }
   },
@@ -39,8 +39,8 @@
         "kind": "Panel",
         "spec": {
           "id": 1,
-          "title": "Failure Reasons",
-          "description": "Count of trace failures in the time range grouped by failure reason. Shows what is causing paths to be unreachable. A high count for a specific reason indicates a systematic issue.",
+          "title": "TX Queue Depth",
+          "description": "Transmit queue length per node, sampled every 15 minutes. Normally zero or near-zero. A sustained rise indicates the node is congested and cannot drain its outbound queue — often correlates with poor RF conditions or high mesh load. Gaps mean the node did not respond to polling.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -57,7 +57,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket:\"meshcore\")\n  |> range(start: v.timeRangeStart)\n  |> filter(fn:(r)=> r._measurement==\"meshcore_trace_result\")\n  |> filter(fn:(r)=> r.failure_reason != \"\")\n  |> filter(fn:(r)=> r._field==\"success\")\n  |> group(columns:[\"failure_reason\"])\n  |> count()\n  |> keep(columns:[\"failure_reason\",\"_value\"])"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_status\")\n  |> filter(fn: (r) => r._field == \"tx_queue_len\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.node\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every: 15m, fn: last, createEmpty: false)"
                       }
                     },
                     "refId": "A",
@@ -71,24 +71,20 @@
           },
           "vizConfig": {
             "kind": "VizConfig",
-            "group": "piechart",
+            "group": "timeseries",
             "version": "13.0.1",
             "spec": {
               "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
                 "legend": {
+                  "calcs": [],
                   "displayMode": "list",
-                  "placement": "bottom",
+                  "placement": "right",
                   "showLegend": true
                 },
-                "pieType": "pie",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "sort": "desc",
                 "tooltip": {
                   "hideZeros": false,
                   "mode": "single",
@@ -97,34 +93,68 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "s",
+                  "unit": "short",
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 5,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 20,
+                        "color": "red"
+                      }
+                    ]
+                  },
                   "color": {
                     "mode": "palette-classic"
                   },
                   "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
                     "hideFrom": {
                       "legend": false,
                       "tooltip": false,
                       "viz": false
+                    },
+                    "insertNulls": 900000,
+                    "lineInterpolation": "linear",
+                    "lineStyle": {
+                      "fill": "solid"
+                    },
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "always",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
                     }
                   },
                   "fieldMinMax": false
                 },
-                "overrides": [
-                  {
-                    "matcher": {
-                      "id": "byRegexp",
-                      "scope": "series",
-                      "options": "^_value (.*)"
-                    },
-                    "properties": [
-                      {
-                        "id": "displayName",
-                        "value": "${__field.labels.failure_reason}"
-                      }
-                    ]
-                  }
-                ]
+                "overrides": []
               }
             }
           },
@@ -160,7 +190,7 @@
       "timezone": "browser",
       "from": "now-24h",
       "to": "now",
-      "autoRefresh": "",
+      "autoRefresh": "15m",
       "autoRefreshIntervals": [
         "5s",
         "10s",
@@ -176,7 +206,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "Failure Reasons",
+    "title": "TX Queue Depth",
     "variables": [],
     "preferences": {
       "layout": {

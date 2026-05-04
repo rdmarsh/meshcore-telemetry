@@ -6,7 +6,7 @@
     "namespace": "default",
     "labels": {},
     "annotations": {
-      "grafana.app/folder": "",
+      "grafana.app/folder": "efkzytlo4pse8b",
       "grafana.app/saved-from-ui": "Grafana v13.0.1 (a100054f)"
     }
   },
@@ -163,7 +163,7 @@
               "x": 0,
               "y": 0,
               "width": 24,
-              "height": 19,
+              "height": 15,
               "element": {
                 "kind": "ElementReference",
                 "name": "panel-1"
