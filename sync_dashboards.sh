@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # Sync Grafana dashboards to/from local JSON files in dashboards/
-# Usage: GRAFANA_TOKEN=glsa_... ./sync_dashboards.sh --pull
-#        GRAFANA_TOKEN=glsa_... ./sync_dashboards.sh --push
+# Usage: ./sync_dashboards.sh --pull
+#        ./sync_dashboards.sh --push
+# Token read from ~/.grafana/token, or override with GRAFANA_TOKEN env var.
 set -euo pipefail
 
 GRAFANA_URL="${GRAFANA_URL:-https://yourenotmyreal.dad}"
-TOKEN="${GRAFANA_TOKEN:?GRAFANA_TOKEN environment variable is required}"
+TOKEN="${GRAFANA_TOKEN:-$(cat "${HOME}/.grafana/token" 2>/dev/null || true)}"
+if [[ -z "$TOKEN" ]]; then
+  echo "ERROR: No Grafana token found. Create ~/.grafana/token or set GRAFANA_TOKEN." >&2
+  exit 1
+fi
 OUT_DIR="$(dirname "$0")/dashboards"
 API_BASE="$GRAFANA_URL/apis/dashboard.grafana.app/v2/namespaces/default/dashboards"
 

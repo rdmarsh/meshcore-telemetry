@@ -2,11 +2,11 @@
   "kind": "Dashboard",
   "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "68a622e2-0fd4-4e52-a0f7-442f5dad61dc",
+    "name": "7046dba0-8d64-4009-a0e4-b5be81f2e95f",
     "namespace": "default",
     "labels": {},
     "annotations": {
-      "grafana.app/folder": "efkmng89f6txca",
+      "grafana.app/folder": "cfkzytn6ni03ke",
       "grafana.app/saved-from-ui": "Grafana v13.0.1 (a100054f)"
     }
   },
@@ -40,7 +40,7 @@
         "spec": {
           "id": 1,
           "title": "Trace Success Rate",
-          "description": "Percentage of trace attempts that succeeded per route, over 1-hour windows. 100% is ideal; drops indicate the route becoming intermittently or completely unreachable.",
+          "description": "Percentage of trace attempts that succeeded per route, over 15-minute windows. 100% is ideal; drops indicate the route becoming intermittently or completely unreachable.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -57,7 +57,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_trace_result\")\n  |> filter(fn: (r) => r._field == \"success\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) * 100.0,\n      route: r.path + \" : \" + r.site\n  }))\n  |> group(columns: [\"route\"])\n  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_trace_result\")\n  |> filter(fn: (r) => r._field == \"success\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) * 100.0,\n      route: r.path + \" : \" + r.site\n  }))\n  |> group(columns: [\"route\"])\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)"
                       }
                     },
                     "refId": "A",
@@ -145,7 +145,32 @@
                   },
                   "fieldMinMax": false
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "__systemRef": "hideSeriesFrom",
+                    "matcher": {
+                      "id": "byNames",
+                      "options": {
+                        "mode": "exclude",
+                        "names": [
+                          "e2-62-e2 : quakershill"
+                        ],
+                        "prefix": "All except:",
+                        "readOnly": true
+                      }
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.hideFrom",
+                        "value": {
+                          "legend": false,
+                          "tooltip": true,
+                          "viz": true
+                        }
+                      }
+                    ]
+                  }
+                ]
               }
             }
           },

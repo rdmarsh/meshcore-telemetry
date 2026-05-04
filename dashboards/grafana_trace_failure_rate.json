@@ -2,11 +2,11 @@
   "kind": "Dashboard",
   "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "6459c64c-66ad-47ad-8506-5762ddd3e627",
+    "name": "ba68f6a6-f6d4-4ef0-870a-558f4566b4ba",
     "namespace": "default",
     "labels": {},
     "annotations": {
-      "grafana.app/folder": "efkmng89f6txca",
+      "grafana.app/folder": "cfkzytn6ni03ke",
       "grafana.app/saved-from-ui": "Grafana v13.0.1 (a100054f)"
     }
   },
@@ -40,7 +40,7 @@
         "spec": {
           "id": 1,
           "title": "Trace Failure Rate",
-          "description": "Percentage of trace attempts that failed per route, over 1-hour windows. 0% is ideal; 100% means the route was completely unreachable. High failure rates on specific routes indicate weak or broken links.",
+          "description": "Percentage of trace attempts that failed per route, over 15-minute windows. 0% is ideal; 100% means the route was completely unreachable. High failure rates on specific routes indicate weak or broken links.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -57,7 +57,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_trace_result\")\n  |> filter(fn: (r) => r._field == \"success\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: (1.0 - float(v: r._value)) * 100.0,\n      route: r.path + \" : \" + r.site\n  }))\n  |> group(columns: [\"route\"])\n  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_trace_result\")\n  |> filter(fn: (r) => r._field == \"success\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: (1.0 - float(v: r._value)) * 100.0,\n      route: r.path + \" : \" + r.site\n  }))\n  |> group(columns: [\"route\"])\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)"
                       }
                     },
                     "refId": "A",

@@ -2,11 +2,11 @@
   "kind": "Dashboard",
   "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "768298cf-474d-49ee-bfbe-91be11e451ec",
+    "name": "dee2f901-0bda-4cab-b5bc-45c34e529fcd",
     "namespace": "default",
     "labels": {},
     "annotations": {
-      "grafana.app/folder": "efkmng89f6txca",
+      "grafana.app/folder": "cfkzytn6ni03ke",
       "grafana.app/saved-from-ui": "Grafana v13.0.1 (a100054f)"
     }
   },
@@ -80,7 +80,10 @@
                   "multiLane": false
                 },
                 "legend": {
-                  "calcs": ["mean", "min"],
+                  "calcs": [
+                    "mean",
+                    "min"
+                  ],
                   "displayMode": "table",
                   "placement": "right",
                   "showLegend": true
@@ -129,12 +132,12 @@
                     "lineStyle": {
                       "fill": "solid"
                     },
-                    "lineWidth": 2,
-                    "pointSize": 4,
+                    "lineWidth": 1,
+                    "pointSize": 1,
                     "scaleDistribution": {
                       "type": "linear"
                     },
-                    "showPoints": "auto",
+                    "showPoints": "always",
                     "showValues": false,
                     "spanNulls": false,
                     "stacking": {
@@ -199,7 +202,10 @@
                   "multiLane": false
                 },
                 "legend": {
-                  "calcs": ["mean", "min"],
+                  "calcs": [
+                    "mean",
+                    "min"
+                  ],
                   "displayMode": "list",
                   "placement": "right",
                   "showLegend": true
@@ -249,12 +255,12 @@
                     "lineStyle": {
                       "fill": "solid"
                     },
-                    "lineWidth": 2,
-                    "pointSize": 4,
+                    "lineWidth": 1,
+                    "pointSize": 1,
                     "scaleDistribution": {
                       "type": "linear"
                     },
-                    "showPoints": "auto",
+                    "showPoints": "always",
                     "showValues": false,
                     "spanNulls": false,
                     "stacking": {
@@ -299,7 +305,7 @@
               "x": 0,
               "y": 0,
               "width": 24,
-              "height": 12,
+              "height": 11,
               "element": {
                 "kind": "ElementReference",
                 "name": "panel-1"
@@ -310,7 +316,7 @@
             "kind": "GridLayoutItem",
             "spec": {
               "x": 0,
-              "y": 12,
+              "y": 11,
               "width": 24,
               "height": 10,
               "element": {
@@ -357,5 +363,10 @@
       }
     }
   },
-  "status": {}
+  "status": {
+    "conversion": {
+      "failed": false,
+      "storedVersion": "v0alpha1"
+    }
+  }
 }
