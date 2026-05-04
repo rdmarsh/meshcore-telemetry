@@ -17,19 +17,15 @@ readonly device_path="/dev/meshcore0"
 readonly trace_delay=10
 readonly trace_timeout=45
 
-# --- trace targets -----------------------------------------------------------
-destinations=(
-  "4a:faulco"
-  "22:lapstone"
-  "62:quakershill"
-  "4d:acaciagardens"
-  "3c:qhpaterson"
-  "64:hawkeshtsb"
-)
+# --- config ------------------------------------------------------------------
+config_file="${MESHCORE_CONFIG:-/usr/local/etc/meshcore/nodes.conf}"
+[[ ! -f "$config_file" ]] && config_file="$(dirname "$0")/nodes.conf"
+# shellcheck source=/dev/null
+source "$config_file" || { echo "Cannot load config: $config_file" >&2; exit 1; }
 
 paths=()
 
-for d in "${destinations[@]}"; do
+for d in "${TRACE_DESTINATIONS[@]}"; do
   node="${d%%:*}"
   site="${d##*:}"
 

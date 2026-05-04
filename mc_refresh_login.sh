@@ -10,20 +10,16 @@ readonly device_path="/dev/meshcore0"
 
 mesh_password="${MESH_PASSWORD:?set MESH_PASSWORD}"
 
-# --- contacts ----------------------------------------------------------------
-contacts=(
-  "qh_corb|🦷 Quakers Hill Corb"
-  "qh_wold|🦷 Quakers Hill Wold"
-  "qh_mid|🦷 Quakers Hill Mid"
-  "qh_paterson|🦷 QH Paterson"
-  "acaciagardens|🦷 Acacia Gardens"
-)
+config_file="${MESHCORE_CONFIG:-/usr/local/etc/meshcore/nodes.conf}"
+[[ ! -f "$config_file" ]] && config_file="$(dirname "$0")/nodes.conf"
+# shellcheck source=/dev/null
+source "$config_file" || { echo "Cannot load config: $config_file" >&2; exit 1; }
 
 ok=0
 fail=0
 
 # --- login sweep --------------------------------------------------------------
-for entry in "${contacts[@]}"; do
+for entry in "${STATUS_CONTACTS[@]}"; do
 
   alias="${entry%%|*}"
   contact="${entry##*|}"

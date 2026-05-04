@@ -15,13 +15,10 @@ readonly query_timeout=30
 readonly query_delay="${QUERY_DELAY:-5}"
 readonly random_jitter=2
 
-contacts=(
-  "qh_corb|🦷 Quakers Hill Corb"
-  "qh_wold|🦷 Quakers Hill Wold"
-  "qh_mid|🦷 Quakers Hill Mid"
-  "qh_paterson|🦷 QH Paterson"
-  "acaciagardens|🦷 Acacia Gardens"
-)
+config_file="${MESHCORE_CONFIG:-/usr/local/etc/meshcore/nodes.conf}"
+[[ ! -f "$config_file" ]] && config_file="$(dirname "$0")/nodes.conf"
+# shellcheck source=/dev/null
+source "$config_file" || { echo "Cannot load config: $config_file" >&2; exit 1; }
 
 # field/tag names intentionally match meshcore-cli JSON.
 # req_status requires contacts to exist on the local node.
@@ -121,16 +118,16 @@ log "Starting meshcore status poll"
 version_tags=$(get_version_tags)
 radio_tags=$(get_radio_tags)
 
-for i in "${!contacts[@]}"; do
+for i in "${!STATUS_CONTACTS[@]}"; do
 
-  entry="${contacts[$i]}"
+  entry="${STATUS_CONTACTS[$i]}"
 
   alias="${entry%%|*}"
   contact="${entry##*|}"
 
   query_status "$alias" "$contact" "$version_tags" "$radio_tags"
 
-  if [ "$i" -lt $((${#contacts[@]}-1)) ]; then
+  if [ "$i" -lt $((${#STATUS_CONTACTS[@]}-1)) ]; then
     jitter=$(awk -v max="$random_jitter" 'BEGIN{srand();print int(rand()*(max+1))}')
     sleep $((query_delay + jitter))
   fi
