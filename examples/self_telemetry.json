@@ -1,0 +1,10 @@
+{
+    "pubkey_pre": "119871484a0f",
+    "lpp": [
+        {
+            "channel": 1,
+            "type": "voltage",
+            "value": 4.24
+        }
+    ]
+}

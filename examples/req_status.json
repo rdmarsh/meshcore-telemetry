@@ -1,0 +1,20 @@
+{
+    "pubkey_pre": "e2601d591517",
+    "bat": 4124,
+    "tx_queue_len": 0,
+    "noise_floor": -107,
+    "last_rssi": -64,
+    "nb_recv": 31081,
+    "nb_sent": 11114,
+    "airtime": 6735,
+    "uptime": 389502,
+    "sent_flood": 6329,
+    "sent_direct": 4785,
+    "recv_flood": 18467,
+    "recv_direct": 12612,
+    "full_evts": 0,
+    "last_snr": 6.25,
+    "direct_dups": 32,
+    "flood_dups": 12136,
+    "rx_airtime": 18663
+}

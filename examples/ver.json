@@ -1,0 +1,11 @@
+{
+    "fw ver": 11,
+    "max_contacts": 350,
+    "max_channels": 40,
+    "ble_pin": 0,
+    "fw_build": "19-Apr-2026",
+    "model": "Heltec V4.3 OLED",
+    "ver": "v1.15.0-dee3e26",
+    "repeat": false,
+    "path_hash_mode": 1
+}

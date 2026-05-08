@@ -1,0 +1,19 @@
+{
+    "adv_type": 1,
+    "tx_power": 10,
+    "max_tx_power": 22,
+    "public_key": "119871484a0f6dd2c77a8f5c59219e075077264b9b5185209b94a5d65ffb93db",
+    "adv_lat": 0.0,
+    "adv_lon": 0.0,
+    "multi_acks": 0,
+    "adv_loc_policy": 0,
+    "telemetry_mode_env": 0,
+    "telemetry_mode_loc": 0,
+    "telemetry_mode_base": 0,
+    "manual_add_contacts": true,
+    "radio_freq": 915.8,
+    "radio_bw": 250.0,
+    "radio_sf": 11,
+    "radio_cr": 5,
+    "name": "🦷 rdm cli 0"
+}
