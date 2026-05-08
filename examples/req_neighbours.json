@@ -1,0 +1,38 @@
+{
+    "pubkey_prefix": "e2601d591517",
+    "pubkey_prefix_length": 4,
+    "neighbours_count": 6,
+    "results_count": 6,
+    "neighbours": [
+        {
+            "pubkey": "cde6cd06",
+            "secs_ago": 4267,
+            "snr": -8.5
+        },
+        {
+            "pubkey": "4aaaaaa5",
+            "secs_ago": 4812,
+            "snr": 10.25
+        },
+        {
+            "pubkey": "2fd9c7bb",
+            "secs_ago": 6905,
+            "snr": 10.5
+        },
+        {
+            "pubkey": "75ab8517",
+            "secs_ago": 6906,
+            "snr": 10.5
+        },
+        {
+            "pubkey": "a733b9a7",
+            "secs_ago": 6909,
+            "snr": -11.75
+        },
+        {
+            "pubkey": "5f6cc95e",
+            "secs_ago": 62475405,
+            "snr": 3.25
+        }
+    ]
+}
