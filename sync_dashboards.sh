@@ -5,7 +5,7 @@
 # Token read from ~/.grafana/token, or override with GRAFANA_TOKEN env var.
 set -euo pipefail
 
-GRAFANA_URL="${GRAFANA_URL:-https://yourenotmyreal.dad}"
+GRAFANA_URL="${GRAFANA_URL:-http://luna:3000}"
 TOKEN="${GRAFANA_TOKEN:-$(cat "${HOME}/.grafana/token" 2>/dev/null || true)}"
 if [[ -z "$TOKEN" ]]; then
   echo "ERROR: No Grafana token found. Create ~/.grafana/token or set GRAFANA_TOKEN." >&2
