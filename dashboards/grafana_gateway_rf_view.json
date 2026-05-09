@@ -54,7 +54,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_discover\")\n  |> filter(fn: (r) => r._field == \"snr\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.node\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:2m, fn:last, createEmpty:false)"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_discover\")\n  |> filter(fn: (r) => r._field == \"snr\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.alias\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:2m, fn:last, createEmpty:false)"
                       }
                     },
                     "refId": "A",
@@ -179,7 +179,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_discover\")\n  |> filter(fn: (r) => r._field == \"snr_in\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.node\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:2m, fn:last, createEmpty:false)"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_discover\")\n  |> filter(fn: (r) => r._field == \"snr_in\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.alias\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:2m, fn:last, createEmpty:false)"
                       }
                     },
                     "refId": "A",
@@ -304,7 +304,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_discover\")\n  |> filter(fn: (r) => r._field == \"rssi\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.node\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:2m, fn:last, createEmpty:false)"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_discover\")\n  |> filter(fn: (r) => r._field == \"rssi\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.alias\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:2m, fn:last, createEmpty:false)"
                       }
                     },
                     "refId": "A",

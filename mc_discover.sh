@@ -12,11 +12,6 @@ log() {
 
 readonly device_path="/dev/meshcore0"
 
-config_file="${MESHCORE_CONFIG:-/usr/local/etc/meshcore/nodes.conf}"
-[[ ! -f "$config_file" ]] && config_file="$(dirname "$0")/nodes.conf"
-# shellcheck source=/dev/null
-source "$config_file" || { echo "Cannot load config: $config_file" >&2; exit 1; }
-
 get_version_tags() {
   local out
   # jq exits 0 on empty stdin, producing no output — capture and apply fallback explicitly
@@ -52,22 +47,29 @@ log "Starting meshcore node discover"
 version_tags=$(get_version_tags)
 radio_tags=$(get_radio_tags)
 
-# Build pubkey_pre → alias map from local contacts database (no radio)
+# Build pubkey_pre → normalized alias map from ALL contacts in local DB (no radio).
+# node=pubkey_pre is the stable series key; alias=adv_name is display label and
+# updates automatically when a node renames — the series never splits on rename.
 contacts_json=$(
   /usr/local/bin/meshcore-cli -j -s "$device_path" contacts 2>/dev/null || echo '{}'
 )
 
-mapping_json=$(
-  for entry in "${STATUS_CONTACTS[@]}"; do
-    alias="${entry%%|*}"
-    contact="${entry##*|}"
-    pubkey=$(jq -r --arg name "$contact" \
-      'to_entries[] | select(.value.adv_name == $name) | .value.public_key[0:12]' \
-      <<< "$contacts_json" | head -1)
-    if [[ -n "$pubkey" && "$pubkey" != "null" ]]; then
-      jq -n --arg k "$pubkey" --arg v "$alias" '{($k): $v}'
-    fi
-  done | jq -s 'add // {}'
+alias_map=$(
+  jq '
+    to_entries |
+    map({
+      key: .value.public_key[0:12],
+      value: (
+        .value.adv_name
+        | if . == null or . == ""
+          then null
+          else ascii_downcase | gsub("[^a-z0-9]+"; "_") | ltrimstr("_") | rtrimstr("_")
+               | if . == "" then null else . end
+          end
+      )
+    }) |
+    from_entries
+  ' <<< "$contacts_json"
 )
 
 output=$(
@@ -79,18 +81,17 @@ output=$(
 count=$(jq 'length' <<< "$output")
 log "Discovered $count node(s)"
 
-# node_discover pubkey is 16 hex chars; match on first 12 (pubkey_pre)
-# unknown nodes fall back to pubkey prefix as tag value
 jq -r \
   --arg vt "$version_tags" \
   --arg rt "$radio_tags" \
-  --argjson mapping "$mapping_json" '
+  --argjson alias_map "$alias_map" '
   .[] |
   . as $n |
   ($n.pubkey[0:12]) as $pre |
-  ($mapping[$pre] // $pre) as $node |
+  ($alias_map[$pre] // $pre) as $alias |
   "meshcore_discover" +
-  ",node=" + $node +
+  ",alias=" + $alias +
+  ",node=" + $pre +
   (if $vt != "" then "," + $vt else "" end) +
   (if $rt != "" then "," + $rt else "" end) +
   " " +

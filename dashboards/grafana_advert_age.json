@@ -54,7 +54,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_advert\")\n  |> filter(fn: (r) => r._field == \"adv_age\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.node\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:1h, fn:last, createEmpty:false)"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_advert\")\n  |> filter(fn: (r) => r._field == \"adv_age\")\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.alias\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:1h, fn:last, createEmpty:false)"
                       }
                     },
                     "refId": "A",
@@ -182,7 +182,7 @@
                         "name": "efjymvmsrry0wb"
                       },
                       "spec": {
-                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_advert\")\n  |> filter(fn: (r) => r._field == \"adv_age\")\n  |> filter(fn: (r) => r._value < 21600)\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.node\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:1h, fn:last, createEmpty:false)"
+                        "query": "from(bucket: \"meshcore\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"meshcore_advert\")\n  |> filter(fn: (r) => r._field == \"adv_age\")\n  |> filter(fn: (r) => r._value < 21600)\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: r._value,\n      series: r.alias\n  }))\n  |> group(columns: [\"series\"])\n  |> aggregateWindow(every:1h, fn:last, createEmpty:false)"
                       }
                     },
                     "refId": "A",

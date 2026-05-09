@@ -67,15 +67,16 @@ jq -r \
   . as $e |
   ($now - $e.value.last_advert) as $age |
   select($age >= 0 and $age <= $max_age) |
+  ($e.value.public_key[0:12]) as $node |
   (
     $e.value.adv_name
-    | ascii_downcase
-    | gsub("[^a-z0-9]+"; "_")
-    | ltrimstr("_")
-    | rtrimstr("_")
-  ) as $node |
-  select($node != "" and $node != null) |
+    | if . == null or . == "" then $node
+      else ascii_downcase | gsub("[^a-z0-9]+"; "_") | ltrimstr("_") | rtrimstr("_")
+      | if . == "" then $node else . end
+      end
+  ) as $alias |
   "meshcore_advert" +
+  ",alias=" + $alias +
   ",node=" + $node +
   (if $vt != "" then "," + $vt else "" end) +
   (if $rt != "" then "," + $rt else "" end) +
