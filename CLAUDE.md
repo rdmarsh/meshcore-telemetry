@@ -14,7 +14,18 @@ Dependencies: `meshcore-cli` (at `/usr/local/bin/meshcore-cli`), `jq`, `shuf`, `
 |---|---|---|
 | `mc_trace.sh` | Multi-hop trace SNR metrics for each destination | 15m |
 | `mc_status.sh` | Node status snapshots (battery, RSSI, SNR, counters) | 15m (offset 7m30s) |
+| `mc_neighbours.sh` | RF neighbour table per node | 15m (offset 3m45s) |
+| `mc_discover.sh` | Directly-heard nodes from gateway (SNR, RSSI, SNR_in) | 2m |
+| `mc_advert_age.sh` | Time since last advertisement per contact (detect fast advertisers) | 1h |
 | `mc_refresh_login.sh` | Re-authenticate to all contacts (run manually when needed) | — |
+| `mc_star_contacts.sh` | Mark STATUS_CONTACTS as starred so they are not pruned (run manually) | — |
+
+## Contact flags
+
+`change_flags <contact> <int>` takes a bitmask integer. Known values (not documented in meshcore-cli source — confirmed by testing):
+- `1` = star (favourite) — prevents contact from being pruned
+- `2` = tel_l (telemetry location) — unconfirmed
+- `4` = tel_a (telemetry ambient) — unconfirmed
 
 ## Running scripts
 
