@@ -2,7 +2,7 @@
   "kind": "Dashboard",
   "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "4651b340-8860-4aa3-ba85-1ba3c098fa9c",
+    "name": "eca8e25c-550f-4938-8de1-e28adc0c7780",
     "namespace": "default",
     "labels": {},
     "annotations": {
@@ -463,7 +463,7 @@
     "tags": [],
     "timeSettings": {
       "timezone": "browser",
-      "from": "now-24h",
+      "from": "now-7d",
       "to": "now",
       "autoRefresh": "15m",
       "autoRefreshIntervals": [
