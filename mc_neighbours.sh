@@ -21,28 +21,33 @@ config_file="${MESHCORE_CONFIG:-/usr/local/etc/meshcore/nodes.conf}"
 source "$config_file" || { echo "Cannot load config: $config_file" >&2; exit 1; }
 
 get_version_tags() {
-  /usr/local/bin/meshcore-cli -j -s "$device_path" ver 2>/dev/null |
-  jq -r '
-    "ver=" + .ver +
-    ",model=" +
-    (
-      .model
-      | ascii_downcase
-      | gsub("[^a-z0-9]+"; "_")
-      | sub("_$"; "")
-    )
-  ' 2>/dev/null || echo "ver=unknown,model=unknown"
+  local out
+  # jq exits 0 on empty stdin, producing no output — capture and apply fallback explicitly
+  out=$(/usr/local/bin/meshcore-cli -j -s "$device_path" ver 2>/dev/null |
+    jq -r '
+      "ver=" + .ver +
+      ",model=" +
+      (
+        .model
+        | ascii_downcase
+        | gsub("[^a-z0-9]+"; "_")
+        | sub("_$"; "")
+      )
+    ' 2>/dev/null)
+  echo "${out:-ver=unknown,model=unknown}"
 }
 
 get_radio_tags() {
-  /usr/local/bin/meshcore-cli -j -s "$device_path" infos 2>/dev/null |
-  jq -r '
-    "radio_freq=" + (.radio_freq|tostring) +
-    ",radio_bw=" + (.radio_bw|tostring) +
-    ",radio_sf=" + (.radio_sf|tostring) +
-    ",radio_cr=" + (.radio_cr|tostring)
-  ' 2>/dev/null ||
-  echo "radio_freq=0,radio_bw=0,radio_sf=0,radio_cr=0"
+  local out
+  # jq exits 0 on empty stdin, producing no output — capture and apply fallback explicitly
+  out=$(/usr/local/bin/meshcore-cli -j -s "$device_path" infos 2>/dev/null |
+    jq -r '
+      "radio_freq=" + (.radio_freq|tostring) +
+      ",radio_bw=" + (.radio_bw|tostring) +
+      ",radio_sf=" + (.radio_sf|tostring) +
+      ",radio_cr=" + (.radio_cr|tostring)
+    ' 2>/dev/null)
+  echo "${out:-radio_freq=0,radio_bw=0,radio_sf=0,radio_cr=0}"
 }
 
 query_neighbours() {
