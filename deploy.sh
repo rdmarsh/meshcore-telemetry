@@ -3,7 +3,7 @@ set -euo pipefail
 
 DEST=/usr/local/bin
 CONF_DEST=/usr/local/etc/meshcore/nodes.conf
-SCRIPTS=(mc_trace.sh mc_status.sh mc_refresh_login.sh mc_neighbours.sh)
+SCRIPTS=(mc_trace.sh mc_status.sh mc_refresh_login.sh mc_neighbours.sh mc_discover.sh)
 
 if [[ $EUID -ne 0 ]]; then
     echo "Run as root (sudo ./deploy.sh)" >&2
@@ -24,8 +24,10 @@ else
     echo "  -> To update: sudo install -m 644 nodes.conf $CONF_DEST"
 fi
 
-TELEGRAF_DROP_IN=/etc/telegraf/telegraf.d/mc_neighbours.conf
-install -m 644 -o root -g root telegraf-neighbours.conf "$TELEGRAF_DROP_IN"
-echo "Installed $TELEGRAF_DROP_IN"
+for conf in telegraf-neighbours.conf telegraf-discover.conf; do
+    drop_in="/etc/telegraf/telegraf.d/${conf#telegraf-}"
+    install -m 644 -o root -g root "$conf" "$drop_in"
+    echo "Installed $drop_in"
+done
 echo "Restarting telegraf..."
 systemctl restart telegraf
