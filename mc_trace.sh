@@ -26,11 +26,12 @@ source "$config_file" || { echo "Cannot load config: $config_file" >&2; exit 1; 
 paths=()
 
 for d in "${TRACE_DESTINATIONS[@]}"; do
-  node="${d%%:*}"
+  pubkey_pre="${d%%:*}"
   site="${d##*:}"
+  hash="${pubkey_pre:0:2}"   # routing uses first byte of public key only
 
-  paths+=("$site|e2,$node,e2")
-  paths+=("$site|2f,$node,2f")
+  paths+=("$site|e2,$hash,e2")
+  paths+=("$site|2f,$hash,2f")
 done
 
 # --- version tags ------------------------------------------------------------
